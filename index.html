@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting with Timezone</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.7/jstz.min.js"></script>
+</head>
+<body>
+  <div id="message" style="color: red; font-weight: bold;"></div>
+
+  <script>
+    (function () {
+      const messageDiv = document.getElementById('message');
+
+      function showError(msg) {
+        if (messageDiv) {
+          messageDiv.textContent = 'Error: ' + msg;
+        } else {
+          console.error(msg);
+        }
+      }
+
+      try {
+        // Check for jstz
+        if (typeof jstz === 'undefined' || typeof jstz.determine !== 'function') {
+          showError('jstz library is not loaded or invalid.');
+          return;
+        }
+
+        // Get timezone
+        const tz = jstz.determine();
+        if (!tz || !tz.name) {
+          showError('Could not determine time zone.');
+          return;
+        }
+
+        const ctz = encodeURIComponent(tz.name());
+
+        // Get the "url" parameter from current URL
+        const params = new URLSearchParams(window.location.search);
+        const targetUrl = params.get('url');
+
+        if (!targetUrl) {
+          showError('Missing "url" parameter in query string.');
+          return;
+        }
+
+        // Redirect to the URL with ctz param appended
+        const target = new URL(targetUrl);
+        target.searchParams.set('ctz', tz.name());
+
+        window.location.href = target.toString();
+
+      } catch (err) {
+        showError('Unexpected error: ' + err.message);
+      }
+    })();
+  </script>
+</body>
+</html>
